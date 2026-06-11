@@ -1,0 +1,8 @@
+{
+  "model_name": "distilbert-base-uncased",
+  "proj_dim": 256,
+  "emb_dim": 256,
+  "temperature": 0.07,
+  "best_epoch": 3,
+  "best_val_r10": 0.9990875908058056
+}
