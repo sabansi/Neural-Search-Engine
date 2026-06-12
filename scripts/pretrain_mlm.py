@@ -19,10 +19,10 @@ sys.path.insert(0, str(ROOT))
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from src.data import TextDataset, load_corpus, load_jsonl, make_mlm_collate, train_val_split
-from src.losses import mlm_loss
 from src.model import EncoderConfig, MLMHead, ScratchEncoder
 from src.tokenizer import TextTokenizer
 from src.trainer import Trainer, pick_device, set_seed, to_device, warmup_cosine_schedule
@@ -41,11 +41,18 @@ class MLMModel(nn.Module):
 
 
 def compute_loss(model, batch):
-    logits = model(batch["input_ids"], batch["attention_mask"])
-    loss = mlm_loss(logits, batch["labels"])
+    hidden = model.encoder.hidden_states(batch["input_ids"], batch["attention_mask"])
+    masked = batch["labels"] != -100
+    if not masked.any():  # vanishingly rare, but keeps the step well-defined
+        return hidden.sum() * 0.0, {"mlm_acc": 0.0}
+    # Project ONLY the masked positions (~15%) onto the 30k vocabulary — the
+    # loss ignores everything else anyway, and the full (B, T, vocab) logits
+    # tensor is by far the most expensive part of the step.
+    labels = batch["labels"][masked]
+    logits = model.head(hidden[masked])
+    loss = F.cross_entropy(logits, labels)
     with torch.no_grad():
-        masked = batch["labels"] != -100
-        acc = (logits.argmax(-1)[masked] == batch["labels"][masked]).float().mean().item() if masked.any() else 0.0
+        acc = (logits.argmax(-1) == labels).float().mean().item()
     return loss, {"mlm_acc": acc}
 
 
