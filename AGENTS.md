@@ -72,7 +72,12 @@ Run all commands from the repo root. DataLoaders use num_workers=0 on purpose
 | `python scripts/sanity_checks.py` | all 5 checks PASS, exit code 0 |
 | `python scripts/pretrain_mlm.py --smoke` | reaches "[trainer] finished", val_loss < init (~10.3) |
 | `python scripts/train_contrastive.py --smoke` | reaches "[trainer] finished" |
-| `python scripts/run_overnight.py --time-budget-hours 10` | overnight.log ends with results table + "overnight run finished" |
+| `python scripts/run_overnight.py` (12h budget default) | overnight.log ends with results table + "overnight run finished" |
+
+Rerun semantics of `run_overnight.py`: a fully completed previous run (both
+`runs/contrastive/DONE` and `evaluation/scratch_results.json` present) is
+auto-archived to `runs/archive/<timestamp>/` and a fresh round starts; a
+partial/crashed run resumes from checkpoints. Never delete `runs/archive/`.
 
 During the real run: MLM val_loss should fall well below its ln(30000) ≈ 10.3
 starting point (roughly 3-5 by the end); contrastive `val_r10_full` (true

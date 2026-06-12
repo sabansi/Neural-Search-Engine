@@ -1,8 +1,12 @@
 """Unattended overnight pipeline: tokenizer → MLM warm-up → contrastive → eval.
 
 Designed to be launched once and left alone:
-  - every stage is skipped if its DONE marker / artifact already exists, so
-    re-running this script simply continues where it left off;
+  - if the PREVIOUS run completed, all of its outputs are auto-archived to
+    runs/archive/<timestamp>/ first and a fresh round trains — rerunning never
+    overwrites old results;
+  - within an unfinished run, every stage is skipped if its DONE marker /
+    artifact already exists, so re-running this script continues where it
+    left off;
   - a crashed training stage is retried once with --resume (checkpoints are
     saved every epoch);
   - the total time budget is divided between stages and enforced inside the
@@ -15,6 +19,7 @@ Usage (PowerShell or bash, from the repo root):
 """
 
 import argparse
+import shutil
 import subprocess
 import sys
 import time
@@ -51,6 +56,31 @@ def run(cmd: list[str]) -> int:
     return proc.wait()
 
 
+def archive_previous_run() -> None:
+    """If the PREVIOUS pipeline ran to completion, move all of its outputs to
+    runs/archive/<timestamp>/ so a rerun trains fresh without overwriting
+    anything. A crashed/partial run does NOT trigger this — its stages keep
+    their skip/resume behaviour. (The tokenizer is deliberately not archived:
+    it is deterministic and every round reuses it.)"""
+    completed = (ROOT / "runs/contrastive/DONE").exists() and \
+                (ROOT / "evaluation/scratch_results.json").exists()
+    if not completed:
+        return
+    dest = ROOT / "runs" / "archive" / time.strftime("%Y-%m-%d_%H%M")
+    dest.mkdir(parents=True, exist_ok=True)
+    moves = [
+        (LOG_PATH, "overnight.log"),  # first, so log() below starts a fresh file
+        (ROOT / "runs/mlm", "mlm"),
+        (ROOT / "runs/contrastive", "contrastive"),
+        (ROOT / "models/scratch", "models_scratch"),
+        (ROOT / "evaluation/scratch_results.json", "scratch_results.json"),
+    ]
+    for src, name in moves:
+        if src.exists():
+            shutil.move(str(src), str(dest / name))
+    log(f"previous completed run archived to {dest} — starting a fresh round")
+
+
 def run_stage(name: str, cmd: list[str], done_marker: Path, resume_flag: bool = True) -> bool:
     if done_marker.exists():
         log(f"stage '{name}' already complete ({done_marker}) — skipping")
@@ -67,7 +97,7 @@ def run_stage(name: str, cmd: list[str], done_marker: Path, resume_flag: bool = 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--time-budget-hours", type=float, default=10.0)
+    parser.add_argument("--time-budget-hours", type=float, default=12.0)
     parser.add_argument("--skip-mlm", action="store_true", help="contrastive-only run (not recommended)")
     parser.add_argument("--mlm-epochs", type=int, default=40)
     parser.add_argument("--contrastive-epochs", type=int, default=40)
@@ -76,6 +106,7 @@ def main() -> None:
     py = sys.executable
     deadline = time.time() + args.time_budget_hours * 3600
     remaining = lambda: max(0.0, (deadline - time.time()) / 3600)
+    archive_previous_run()
     log(f"=== overnight run started, budget {args.time_budget_hours}h ===")
 
     # 0) sanity suite — refuses to launch a broken build into a long run
