@@ -1,0 +1,15 @@
+# Minimal dependencies for the from-scratch training pipeline (scripts/ + src/).
+#
+# IMPORTANT: install torch FIRST and separately — the RTX 5070 (Blackwell,
+# sm_120) needs PyTorch >= 2.7 built against CUDA 12.8:
+#
+#   pip install --index-url https://download.pytorch.org/whl/cu128 torch
+#
+tokenizers>=0.15
+numpy>=1.26
+tqdm>=4.66
+matplotlib>=3.8
+
+# Optional:
+# faiss-cpu   # FAISS index build in encode_and_eval.py (numpy search works without it)
+# wandb       # live training curves in the browser via the --wandb flag

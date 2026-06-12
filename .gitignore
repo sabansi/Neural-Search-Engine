@@ -29,3 +29,8 @@ Thumbs.db
 
 # Env files
 .env
+
+# Throwaway training runs (real runs/mlm and runs/contrastive logs ARE tracked)
+runs/*_smoke/
+runs/sanity_tmp/
+runs/calib_*/
