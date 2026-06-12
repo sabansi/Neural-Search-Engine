@@ -67,8 +67,13 @@ occupying the real run directories.
 # keep the machine awake while plugged in (one-time):
 powercfg /change standby-timeout-ac 0
 
-python scripts\run_overnight.py --time-budget-hours 10
+python scripts\run_overnight.py        # 12h budget by default
 ```
+
+Rerunning is always safe: if the previous run **completed**, all of its results
+are automatically moved to `runs\archive\<timestamp>\` (nothing is overwritten)
+and a fresh round trains; if the previous run **crashed or was interrupted**,
+the same command resumes it from checkpoints instead.
 
 Leave the PowerShell window open (minimized is fine; the monitor can sleep).
 The pipeline runs: sanity checks → tokenizer → MLM warm-up → contrastive
@@ -107,5 +112,5 @@ then add `--wandb` to the stage commands (skip this if login is any trouble).
 | `no kernel image is available for execution` | torch is not the cu128 build — redo step 1's torch install |
 | `CUDA out of memory` | re-run the stage with `--batch-size 128` (or 64) |
 | non-finite loss (script aborts with a message) | delete that stage's run dir (`Remove-Item -Recurse -Force runs\mlm` or `runs\contrastive`) and re-run the stage with `--lr 1e-4`; then re-run `run_overnight.py` to continue the pipeline |
-| machine rebooted overnight | just re-run `python scripts\run_overnight.py --time-budget-hours <hours left>` |
+| machine rebooted overnight | just re-run `python scripts\run_overnight.py --time-budget-hours <hours left>` — it resumes; it only archives + starts over after a fully *completed* run |
 | anything else | open the repo in Cursor/Codex and paste the error — `AGENTS.md` briefs the AI on everything |
