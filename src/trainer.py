@@ -171,6 +171,7 @@ class Trainer:
             self.epoch = epoch
             self.model.train()
             running, n_batches = 0.0, 0
+            print(f"[trainer] epoch {epoch + 1}/{epochs} started", flush=True)
             # disable=None → progress bar only on a real terminal, so piping
             # the overnight run into run.log doesn't fill it with \r frames.
             pbar = tqdm(train_loader, desc=f"epoch {epoch + 1}/{epochs}", leave=False, disable=None)

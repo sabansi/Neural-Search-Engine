@@ -141,7 +141,7 @@ def check_pad_invariance(model, tokenizer, pairs) -> None:
         pad = torch.full((ids.size(0), 25), tokenizer.pad_id, dtype=torch.long)
         padded = model(torch.cat([ids, pad], 1), torch.cat([mask, torch.zeros_like(pad)], 1))
     diff = (base - padded).abs().max().item()
-    report("padding invariance", diff < 1e-5, f"max |Δembedding| = {diff:.2e}")
+    report("padding invariance", diff < 1e-5, f"max |delta_embedding| = {diff:.2e}")
 
 
 def check_ckpt_resume(model, tokenizer, pairs, tmp_dir: Path) -> None:
@@ -178,7 +178,7 @@ def check_ckpt_resume(model, tokenizer, pairs, tmp_dir: Path) -> None:
     with torch.no_grad():
         model.eval(), model2.eval()
         out_equal = torch.equal(embed(model, tokenizer, [pairs[0][0]]), embed(model2, tokenizer, [pairs[0][0]]))
-    report("checkpoint → resume", params_equal and state_equal and out_equal,
+    report("checkpoint -> resume", params_equal and state_equal and out_equal,
            f"params={params_equal}, counters={state_equal}, outputs={out_equal}")
 
 
