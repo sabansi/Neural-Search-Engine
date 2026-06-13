@@ -1,9 +1,9 @@
 # ნეირონული საძიებო სისტემა — პროექტის ანგარიში
 
-**საგანი:** ბუნებრივი ენის დამუშავება (NLP) 
-**მონაცემთა ბაზა:** SQuAD v1.1 (Stanford Question Answering Dataset) 
-**მოდელი:** ბი-ენკოდერი (bi-encoder), დატრენინგებული კონტრასტული InfoNCE loss-ით 
-**დემო კორპუსი:** Jurafsky & Martin — *Speech and Language Processing* (მე-3 გამოცემა) 
+ - **საგანი:** ბუნებრივი ენის დამუშავება (NLP) 
+ - **მონაცემთა ბაზა:** SQuAD v1.1 (Stanford Question Answering Dataset) 
+ - **მოდელი:** ბი-ენკოდერი (bi-encoder), დატრენინგებული კონტრასტული InfoNCE loss-ით 
+ - **დემო კორპუსი:** Jurafsky & Martin — *Speech and Language Processing* (მე-3 გამოცემა) 
 
 ---
 
