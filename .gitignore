@@ -37,3 +37,6 @@ runs/calib_*/
 
 # Editor
 .vscode/
+
+# Submission archive (build artifact)
+*.zip
