@@ -34,3 +34,6 @@ Thumbs.db
 runs/*_smoke/
 runs/sanity_tmp/
 runs/calib_*/
+
+# Editor
+.vscode/

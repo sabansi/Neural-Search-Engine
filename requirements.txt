@@ -1,34 +1,24 @@
-# Core ML & NLP
-torch>=2.0.0
-transformers>=4.35.0
-datasets>=2.14.0
-tokenizers>=0.14.0
+# ── Model, training, inference ───────────────────────────────────────────────
+# NOTE: on an NVIDIA Blackwell GPU (e.g. RTX 50-series) install torch FIRST from
+# the CUDA 12.8 wheel index, then the rest of this file:
+#   pip install --index-url https://download.pytorch.org/whl/cu128 torch
+torch>=2.2
+tokenizers>=0.15
+numpy>=1.26
+tqdm>=4.66
+matplotlib>=3.8
 
-# Baseline retrieval
-rank-bm25>=0.2.2
-scikit-learn>=1.3.0
+# ── Data preparation (notebook 01) ───────────────────────────────────────────
+datasets>=2.16      # load SQuAD v1.1
+pandas>=2.0
 
-# Vector search
-faiss-cpu>=1.7.4
-numpy>=1.24.0
+# ── Baselines (notebook 02) ──────────────────────────────────────────────────
+scikit-learn>=1.3   # TF-IDF
+rank-bm25>=0.2.2    # BM25
 
-# Data processing
-pandas>=2.0.0
-nltk>=3.8.1
-tqdm>=4.66.0
+# ── Running the notebooks ────────────────────────────────────────────────────
+ipykernel>=6.25
 
-# PDF extraction (for Jurafsky & Martin book)
-pdfminer.six>=20221105
-pymupdf>=1.23.0
-
-# Experiment tracking & visualization
-matplotlib>=3.7.0
-seaborn>=0.12.0
-wandb>=0.16.0
-
-# Jupyter
-jupyter>=1.0.0
-ipykernel>=6.25.0
-
-# Utilities
-scipy>=1.11.0
+# ── Optional ─────────────────────────────────────────────────────────────────
+# faiss-cpu>=1.7     # ANN index in encode_and_eval.py (brute-force numpy works without it)
+# wandb>=0.16        # live training curves via the --wandb flag

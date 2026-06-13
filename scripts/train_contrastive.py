@@ -25,12 +25,12 @@ from torch.utils.data import DataLoader
 from src.data import PairDataset, load_corpus, load_jsonl, make_contrastive_collate
 from src.inference import encode_texts, retrieval_metrics
 from src.losses import info_nce_loss
-from src.model import EncoderConfig, ScratchEncoder
+from src.model import EncoderConfig, Encoder
 from src.tokenizer import TextTokenizer
 from src.trainer import Trainer, pick_device, set_seed, to_device, warmup_cosine_schedule
 
 
-def load_mlm_encoder_weights(encoder: ScratchEncoder, ckpt_path: Path) -> None:
+def load_mlm_encoder_weights(encoder: Encoder, ckpt_path: Path) -> None:
     payload = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     state = payload["model_state"]
     encoder_state = {k.removeprefix("encoder."): v for k, v in state.items() if k.startswith("encoder.")}
@@ -46,7 +46,7 @@ def main() -> None:
     parser.add_argument("--temperature", type=float, default=0.07)
     parser.add_argument("--init-from", type=Path, default=ROOT / "runs" / "mlm" / "ckpt_best.pt")
     parser.add_argument("--no-init", action="store_true", help="skip MLM init, start from random weights")
-    parser.add_argument("--tokenizer", type=Path, default=ROOT / "models" / "tokenizer_scratch")
+    parser.add_argument("--tokenizer", type=Path, default=ROOT / "models" / "tokenizer")
     parser.add_argument("--run-dir", type=Path, default=ROOT / "runs" / "contrastive")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--smoke", action="store_true", help="tiny subset, 2 epochs — wiring check only")
@@ -79,7 +79,7 @@ def main() -> None:
 
     device = pick_device()
     cfg = EncoderConfig(vocab_size=tokenizer.vocab_size, pad_id=tokenizer.pad_id)
-    model = ScratchEncoder(cfg)
+    model = Encoder(cfg)
     if not args.no_init and Path(args.init_from).exists():
         load_mlm_encoder_weights(model, args.init_from)
     else:
@@ -94,7 +94,7 @@ def main() -> None:
     if args.wandb:
         import wandb
 
-        wandb_run = wandb.init(project="neural-search-scratch", name="contrastive", config=vars(args))
+        wandb_run = wandb.init(project="neural-search", name="contrastive", config=vars(args))
 
     def compute_loss(model, batch):
         q_emb = model(batch["q_ids"], batch["q_mask"])

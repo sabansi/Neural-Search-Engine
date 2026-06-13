@@ -63,7 +63,7 @@ def archive_previous_run() -> None:
     their skip/resume behaviour. (The tokenizer is deliberately not archived:
     it is deterministic and every round reuses it.)"""
     completed = (ROOT / "runs/contrastive/DONE").exists() and \
-                (ROOT / "evaluation/scratch_results.json").exists()
+                (ROOT / "evaluation/results.json").exists()
     if not completed:
         return
     dest = ROOT / "runs" / "archive" / time.strftime("%Y-%m-%d_%H%M")
@@ -72,8 +72,8 @@ def archive_previous_run() -> None:
         (LOG_PATH, "overnight.log"),  # first, so log() below starts a fresh file
         (ROOT / "runs/mlm", "mlm"),
         (ROOT / "runs/contrastive", "contrastive"),
-        (ROOT / "models/scratch", "models_scratch"),
-        (ROOT / "evaluation/scratch_results.json", "scratch_results.json"),
+        (ROOT / "models/embeddings", "embeddings"),
+        (ROOT / "evaluation/results.json", "results.json"),
     ]
     for src, name in moves:
         if src.exists():
@@ -116,7 +116,7 @@ def main() -> None:
 
     # 1) tokenizer (idempotent: skips itself if tokenizer.json exists)
     if not run_stage("tokenizer", [py, "scripts/train_tokenizer.py"],
-                     ROOT / "models/tokenizer_scratch/tokenizer.json", resume_flag=False):
+                     ROOT / "models/tokenizer/tokenizer.json", resume_flag=False):
         sys.exit(1)
 
     # 2) MLM warm-up
@@ -150,8 +150,8 @@ def main() -> None:
     log("  runs/mlm/history.json, runs/mlm/curves.png")
     log("  runs/contrastive/history.json, runs/contrastive/curves.png")
     log("  runs/contrastive/ckpt_best.pt   (large file: Drive or GitHub release)")
-    log("  models/scratch/                 (embeddings + ids)")
-    log("  evaluation/scratch_results.json")
+    log("  models/embeddings/                 (embeddings + ids)")
+    log("  evaluation/results.json")
     log("  overnight.log")
     sys.exit(code)
 

@@ -1,6 +1,6 @@
 """Stage 4: encode corpora with the trained encoder, evaluate, and demo.
 
-  1. Encodes the SQuAD corpus and the J&M book chunks → models/scratch/*.npy
+  1. Encodes the SQuAD corpus and the J&M book chunks → models/embeddings/*.npy
   2. Evaluates full-corpus retrieval on the test split (Recall@1/5/10, MRR)
      and prints a comparison against the stored TF-IDF / BM25 baselines
   3. Builds a FAISS inner-product index over the J&M chunks (optional dep)
@@ -23,7 +23,7 @@ import torch
 
 from src.data import load_corpus, load_jsonl
 from src.inference import encode_texts, retrieval_metrics
-from src.model import EncoderConfig, ScratchEncoder
+from src.model import EncoderConfig, Encoder
 from src.tokenizer import TextTokenizer
 from src.trainer import pick_device
 
@@ -35,23 +35,28 @@ DEMO_QUERIES = [
 ]
 
 
-def load_trained_encoder(ckpt_path: Path, device) -> tuple[ScratchEncoder, TextTokenizer]:
+def load_trained_encoder(ckpt_path: Path, device) -> tuple[Encoder, TextTokenizer]:
     payload = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     cfg = EncoderConfig(**(payload.get("config") or payload["encoder_config"]))
-    encoder = ScratchEncoder(cfg)
+    encoder = Encoder(cfg)
     state = payload["model_state"]
     if any(k.startswith("encoder.") for k in state):  # MLM-stage checkpoint
         state = {k.removeprefix("encoder."): v for k, v in state.items() if k.startswith("encoder.")}
     encoder.load_state_dict(state)
     encoder.to(device).eval()
-    tokenizer = TextTokenizer.load(payload["tokenizer_path"])
+    # The checkpoint records the tokenizer path from the training machine; fall
+    # back to the in-repo tokenizer when that absolute path is not present here.
+    tok_path = Path(payload.get("tokenizer_path", ""))
+    if not tok_path.exists():
+        tok_path = ROOT / "models" / "tokenizer"
+    tokenizer = TextTokenizer.load(tok_path)
     return encoder, tokenizer
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ckpt", type=Path, default=ROOT / "runs" / "contrastive" / "ckpt_best.pt")
-    parser.add_argument("--out", type=Path, default=ROOT / "models" / "scratch")
+    parser.add_argument("--out", type=Path, default=ROOT / "models" / "embeddings")
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--no-eval", action="store_true", help="skip test-set evaluation")
     parser.add_argument("--demo", nargs="*", default=None, help="demo queries (default: built-in examples)")
@@ -109,7 +114,7 @@ def main() -> None:
             model, tokenizer, [t["query"] for t in test], device, args.batch_size, max_len=64, show_progress=True
         )
         metrics = retrieval_metrics(query_emb, corpus_emb, gold)
-        results = {"BiEncoder-scratch": {
+        results = {"Bi-Encoder": {
             "Recall@1": metrics["recall@1"], "Recall@5": metrics["recall@5"],
             "Recall@10": metrics["recall@10"], "MRR": metrics["mrr"],
         }}
@@ -124,9 +129,9 @@ def main() -> None:
         for name, m in results.items():
             print(f"{name:<22}{m['Recall@1']:>8.4f}{m['Recall@5']:>8.4f}{m['Recall@10']:>8.4f}{m['MRR']:>8.4f}")
         if args.limit:
-            print("[eval] --limit set: numbers are meaningless, NOT writing scratch_results.json")
+            print("[eval] --limit set: numbers are meaningless, NOT writing results.json")
         else:
-            out_path = ROOT / "evaluation" / "scratch_results.json"
+            out_path = ROOT / "evaluation" / "results.json"
             out_path.write_text(json.dumps(results, indent=2))
             print(f"[eval] written to {out_path}")
 

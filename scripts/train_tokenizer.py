@@ -1,4 +1,4 @@
-"""Stage 1: train our WordPiece tokenizer from scratch on our own corpora.
+"""Stage 1: train our WordPiece tokenizer on our own corpora.
 
 Training text = SQuAD passages + training queries + the Jurafsky & Martin book
 chunks. Only *train*-split queries are used so no test data influences the
@@ -22,7 +22,7 @@ from src.tokenizer import train_wordpiece
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--vocab-size", type=int, default=30_000)
-    parser.add_argument("--out", type=Path, default=ROOT / "models" / "tokenizer_scratch")
+    parser.add_argument("--out", type=Path, default=ROOT / "models" / "tokenizer")
     args = parser.parse_args()
 
     if (args.out / "tokenizer.json").exists():

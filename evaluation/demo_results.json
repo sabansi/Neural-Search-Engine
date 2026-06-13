@@ -1,0 +1,70 @@
+{
+  "How does beam search decoding work?": [
+    {
+      "id": "jm_0335",
+      "score": 0.727,
+      "text": "Beam search is common in language model generation tasks. For tasks like MT, which we’ll return to in Chapter 13, we generally use beam widths k between 5 and 10. What do we do with the resulting k hypotheses? In some cases, all we need fro"
+    },
+    {
+      "id": "jm_0332",
+      "score": 0.715,
+      "text": "Instead, decoding in sequence generation problems generally uses a method called beam search. In beam search, instead of choosing the best token to generate at each timestep, we keep k possible tokens at each step. This ﬁxed-size memory foo"
+    },
+    {
+      "id": "jm_0333",
+      "score": 0.679,
+      "text": "• BEAM SEARCH Figure 10.9 Beam search decoding with a beam width of k = 2. At each time step, we choose the k best hypotheses, compute the V possible extensions of each hypothesis, score the resulting k V possible hypotheses and choose the "
+    }
+  ],
+  "What is the difference between stemming and lemmatization?": [
+    {
+      "id": "jm_0366",
+      "score": 0.721,
+      "text": "Morphologically, languages are often characterized along two dimensions of variation. The ﬁrst is the number of morphemes per word, ranging from isolating languages like Vietnamese and Cantonese, in which each word generally has one morphem"
+    },
+    {
+      "id": "jm_0060",
+      "score": 0.703,
+      "text": "How is lemmatization done? The most sophisticated methods for lemmatization involve complete morphological parsing of the word. Morphology is the study of the way words are built up from smaller meaning-bearing units called morphemes. Two b"
+    },
+    {
+      "id": "jm_0032",
+      "score": 0.687,
+      "text": "Another part of text normalization is lemmatization, the task of determining that two words have the same root, despite their surface differences. For example, the words sang, sung, and sings are forms of the verb sing. The word sing is the"
+    }
+  ],
+  "How are word embeddings learned with skip-gram?": [
+    {
+      "id": "jm_0200",
+      "score": 0.814,
+      "text": "Intuition of one step of gradient descent. The skip-gram model tries to shift Figure 6.14 embeddings so the target embeddings (here for apricot) are closer to (have a higher dot product with) context embeddings for nearby words (here jam) a"
+    },
+    {
+      "id": "jm_0235",
+      "score": 0.773,
+      "text": "A feedforward neural language model (LM) is a feedforward network that takes as input at time t a representation of some number of previous words (wt 2, etc.) and outputs a probability distribution over possible next words. Thus—like the n-"
+    },
+    {
+      "id": "jm_0711",
+      "score": 0.77,
+      "text": "Once we have embeddings for each pole word, we create an embedding that represents each pole by taking the centroid of the embeddings of each of the seed words; recall that the centroid is the multidimensional version of the mean. Given 1 )"
+    }
+  ],
+  "What problem does attention solve in sequence to sequence models?": [
+    {
+      "id": "jm_0513",
+      "score": 0.782,
+      "text": "to look into. For example WaveNet uses a special kind of a gated activation funcIn practice, tion as its non-linearity, and contains residual and skip connections. predicting 8-bit audio values doesn’t as work as well as 16-bit, for which a"
+    },
+    {
+      "id": "jm_0301",
+      "score": 0.755,
+      "text": "A second difﬁculty with training RNNs arises from the need to backpropagate the error signal back through time. Recall from Section 9.1.2 that the hidden layer at time t contributes to the loss at the next time step since it takes part in t"
+    },
+    {
+      "id": "jm_0342",
+      "score": 0.735,
+      "text": "Finally, a fundamental issue with transformers is that the size of the input layer dictates the complexity of model. Both the time and memory requirements in a transformer grow quadratically with the length of the input. It’s necessary, the"
+    }
+  ]
+}

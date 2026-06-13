@@ -1,8 +1,8 @@
-"""From-scratch transformer text encoder.
+"""Transformer text encoder.
 
-Course requirement: the model's architecture must be implemented by us — no
-pretrained weights and no HuggingFace architecture classes. Everything below
-is plain PyTorch built from nn.Linear / nn.Embedding / nn.LayerNorm.
+A bi-encoder built directly from plain PyTorch primitives
+(nn.Linear / nn.Embedding / nn.LayerNorm) — the attention, transformer block
+and pooling are implemented here rather than imported from a model library.
 
 Architecture (bi-encoder with shared weights for queries and documents):
 
@@ -77,7 +77,7 @@ class MultiHeadSelfAttention(nn.Module):
 
 
 class TransformerBlock(nn.Module):
-    """Pre-LayerNorm block (more stable than post-LN when training from scratch)."""
+    """Pre-LayerNorm block (more stable than post-LN for randomly-initialised training)."""
 
     def __init__(self, cfg: EncoderConfig):
         super().__init__()
@@ -97,7 +97,7 @@ class TransformerBlock(nn.Module):
         return x
 
 
-class ScratchEncoder(nn.Module):
+class Encoder(nn.Module):
     def __init__(self, cfg: EncoderConfig):
         super().__init__()
         self.cfg = cfg
@@ -148,7 +148,7 @@ class MLMHead(nn.Module):
     """BERT-style masked-language-modelling head with the decoder tied to the
     token embedding matrix (saves ~11.5M parameters and trains better)."""
 
-    def __init__(self, encoder: ScratchEncoder):
+    def __init__(self, encoder: Encoder):
         super().__init__()
         d = encoder.cfg.d_model
         self.dense = nn.Linear(d, d)
@@ -163,17 +163,17 @@ class MLMHead(nn.Module):
         return h @ self._tied_embedding[0].weight.t() + self.bias
 
 
-def save_encoder(path, encoder: ScratchEncoder, extra: dict | None = None) -> None:
+def save_encoder(path, encoder: Encoder, extra: dict | None = None) -> None:
     payload = {"config": encoder.cfg.to_dict(), "model_state": encoder.state_dict()}
     if extra:
         payload.update(extra)
     torch.save(payload, path)
 
 
-def load_encoder(path, map_location="cpu") -> ScratchEncoder:
+def load_encoder(path, map_location="cpu") -> Encoder:
     payload = torch.load(path, map_location=map_location, weights_only=False)
     cfg = EncoderConfig(**payload["config"])
-    encoder = ScratchEncoder(cfg)
+    encoder = Encoder(cfg)
     state = payload.get("model_state") or payload["encoder_state"]
     encoder.load_state_dict(state)
     return encoder

@@ -1,8 +1,4 @@
-"""Contrastive and MLM losses, implemented from scratch.
-
-Course requirement: contrastive learning must be self-implemented
-(`sentence-transformers` is not allowed).
-"""
+"""Contrastive (symmetric InfoNCE) and MLM losses, implemented in plain PyTorch."""
 
 import torch
 import torch.nn.functional as F

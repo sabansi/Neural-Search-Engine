@@ -1,10 +1,9 @@
-"""Stage 2: self-supervised MLM warm-up of the from-scratch encoder.
+"""Stage 2: self-supervised MLM warm-up of the encoder.
 
-Masked-language-model pre-training on OUR OWN corpora (SQuAD passages +
-training queries + the J&M book), starting from random initialisation. This is
-not "using a pretrained model" — we are the ones training it, from scratch —
-it just gives the encoder basic language statistics before the contrastive
-stage, which matters a lot for a 19M-parameter model with no prior knowledge.
+Masked-language-model training on our corpora (SQuAD passages + training
+queries + the J&M book), starting from random initialisation. It gives the
+encoder basic language statistics before the contrastive stage, which matters
+a lot for a 19M-parameter model with no prior knowledge.
 
 Usage:
     python scripts/pretrain_mlm.py [--epochs 40] [--resume] [--smoke] [--time-budget-hours 5]
@@ -23,7 +22,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from src.data import TextDataset, load_corpus, load_jsonl, make_mlm_collate, train_val_split
-from src.model import EncoderConfig, MLMHead, ScratchEncoder
+from src.model import EncoderConfig, MLMHead, Encoder
 from src.tokenizer import TextTokenizer
 from src.trainer import Trainer, pick_device, set_seed, to_device, warmup_cosine_schedule
 
@@ -31,7 +30,7 @@ from src.trainer import Trainer, pick_device, set_seed, to_device, warmup_cosine
 class MLMModel(nn.Module):
     """Encoder + MLM head bundled so the Trainer checkpoints both together."""
 
-    def __init__(self, encoder: ScratchEncoder):
+    def __init__(self, encoder: Encoder):
         super().__init__()
         self.encoder = encoder
         self.head = MLMHead(encoder)
@@ -62,7 +61,7 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--lr", type=float, default=5e-4)
     parser.add_argument("--max-len", type=int, default=288)
-    parser.add_argument("--tokenizer", type=Path, default=ROOT / "models" / "tokenizer_scratch")
+    parser.add_argument("--tokenizer", type=Path, default=ROOT / "models" / "tokenizer")
     parser.add_argument("--run-dir", type=Path, default=ROOT / "runs" / "mlm")
     parser.add_argument("--resume", action="store_true", help="continue from ckpt_last.pt")
     parser.add_argument("--smoke", action="store_true", help="tiny subset, 2 epochs — wiring check only")
@@ -94,7 +93,7 @@ def main() -> None:
 
     device = pick_device()
     cfg = EncoderConfig(vocab_size=tokenizer.vocab_size, pad_id=tokenizer.pad_id)
-    model = MLMModel(ScratchEncoder(cfg))
+    model = MLMModel(Encoder(cfg))
     print(f"[mlm] device={device}, encoder params={model.encoder.num_parameters() / 1e6:.1f}M, "
           f"train={len(train_texts):,} val={len(val_texts):,} texts, {len(train_loader)} steps/epoch")
 
@@ -105,7 +104,7 @@ def main() -> None:
     if args.wandb:
         import wandb
 
-        wandb_run = wandb.init(project="neural-search-scratch", name="mlm", config=vars(args))
+        wandb_run = wandb.init(project="neural-search", name="mlm", config=vars(args))
 
     def validate(model):
         total, n = 0.0, 0

@@ -4,13 +4,13 @@ import numpy as np
 import torch
 
 from .data import DOC_MAX_LEN
-from .model import ScratchEncoder
+from .model import Encoder
 from .tokenizer import TextTokenizer
 
 
 @torch.no_grad()
 def encode_texts(
-    model: ScratchEncoder,
+    model: Encoder,
     tokenizer: TextTokenizer,
     texts: list[str],
     device: torch.device,

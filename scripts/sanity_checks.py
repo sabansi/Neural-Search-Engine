@@ -1,4 +1,4 @@
-"""Forward/backward sanity suite for the from-scratch encoder.
+"""Forward/backward sanity suite for the transformer encoder.
 
 Run this BEFORE any long training run (it takes ~1 minute on CPU):
 
@@ -32,7 +32,7 @@ import torch.nn.functional as F
 
 from src.data import load_corpus, load_jsonl, make_mlm_collate
 from src.losses import info_nce_loss, mlm_loss
-from src.model import EncoderConfig, MLMHead, ScratchEncoder
+from src.model import EncoderConfig, MLMHead, Encoder
 from src.tokenizer import TextTokenizer, train_wordpiece
 
 DEVICE = torch.device("cpu")  # deterministic; the suite is small on purpose
@@ -45,7 +45,7 @@ def report(name: str, ok: bool, detail: str) -> None:
         FAILURES.append(name)
 
 
-def tiny_setup() -> tuple[ScratchEncoder, TextTokenizer, list[tuple[str, str]]]:
+def tiny_setup() -> tuple[Encoder, TextTokenizer, list[tuple[str, str]]]:
     """Small model + tokenizer trained on a slice of the real corpus."""
     corpus = load_corpus(ROOT / "data/processed/corpus.json")
     triplets = load_jsonl(ROOT / "data/processed/train.jsonl")
@@ -64,7 +64,7 @@ def tiny_setup() -> tuple[ScratchEncoder, TextTokenizer, list[tuple[str, str]]]:
             pairs.append((t["query"], corpus[t["positive_id"]]))
         if len(pairs) == 32:
             break
-    return ScratchEncoder(cfg), tokenizer, pairs
+    return Encoder(cfg), tokenizer, pairs
 
 
 def embed(model, tokenizer, texts, max_len=96):
@@ -164,7 +164,7 @@ def check_ckpt_resume(model, tokenizer, pairs, tmp_dir: Path) -> None:
     trainer = Trainer(model, opt, sched, run_dir=tmp_dir, device=DEVICE)
     trainer.fit(loader, loss_fn, epochs=2)
 
-    model2 = ScratchEncoder(model.cfg)
+    model2 = Encoder(model.cfg)
     opt2 = torch.optim.AdamW(model2.parameters(), lr=1e-4)
     sched2 = warmup_cosine_schedule(opt2, total_steps=8)
     trainer2 = Trainer(model2, opt2, sched2, run_dir=tmp_dir, device=DEVICE)

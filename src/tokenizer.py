@@ -1,9 +1,8 @@
-"""Our own WordPiece tokenizer, trained from scratch on our corpora.
+"""Our own WordPiece tokenizer, trained on our corpora.
 
-The HuggingFace `tokenizers` library is used only as a utility implementation
-of the WordPiece training algorithm — the vocabulary itself is learned from
-our own data (SQuAD passages + queries and the Jurafsky & Martin book), so no
-pretrained artifacts enter the pipeline.
+The HuggingFace `tokenizers` library provides the WordPiece training
+algorithm; the vocabulary itself is learned from our own data (SQuAD passages
+and queries, and the Jurafsky & Martin book).
 """
 
 from pathlib import Path
@@ -56,7 +55,7 @@ class TextTokenizer:
 
 
 def train_wordpiece(texts: list[str], vocab_size: int = 30_000, save_dir: str | Path | None = None) -> TextTokenizer:
-    """Train a BERT-style WordPiece tokenizer from scratch on `texts`."""
+    """Train a BERT-style WordPiece tokenizer on `texts`."""
     tok = Tokenizer(models.WordPiece(unk_token="[UNK]"))
     # Same text normalisation choices as BERT-uncased: NFD unicode
     # normalisation, lowercasing, accent stripping — queries arrive with
