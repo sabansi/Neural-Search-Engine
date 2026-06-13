@@ -80,32 +80,6 @@ The trained encoder checkpoint (`*.pt`) is not stored in the repository.
 `runs/contrastive/ckpt_best.pt` or `models/encoder.pt`; otherwise notebook 04
 displays the recorded search results from `evaluation/demo_results.json`.
 
-## Demo — semantic search over the book
-
-Interactive search of *Speech and Language Processing* by natural-language query.
-Three things are needed: this repo, the Python dependencies, and the trained
-checkpoint (distributed separately — it is ~216 MB and not in the repo).
-
-```bash
-# 1. dependencies (see Setup above)
-pip install -r requirements.txt
-
-# 2. place the trained checkpoint here:
-#    runs/contrastive/ckpt_best.pt        (download link: <ADD DRIVE LINK>)
-
-# 3. run the demo
-python scripts/search.py                       # interactive prompt
-python scripts/search.py "how does beam search decoding work?"   # one-shot
-python scripts/search.py --k 5 "what is perplexity?"
-```
-
-Each search encodes only the query (one forward pass), so it is instant and runs
-fine on CPU. The book passages are already embedded in `models/embeddings/`; if
-that file is absent (e.g. a partial clone) the script re-encodes the book once
-from the checkpoint. Queries that work well: *how are word2vec embeddings
-trained?*, *what is a hidden Markov model?*, *how does the Viterbi algorithm
-work?*, *how does naive Bayes classify text?*
-
 ## Data
 
 **SQuAD v1.1** (`rajpurkar/squad`): ~87,600 (question, Wikipedia paragraph)
